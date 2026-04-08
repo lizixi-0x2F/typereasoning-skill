@@ -103,6 +103,7 @@ Rules for the tool loop:
 - Do NOT write "I will now...", "Let me...", "The result shows..." or any prose. Only judgements.
 - If multiple tool calls are needed, chain them as a sequence of beta reductions: each result type feeds into the next term.
 - The final tool loop step must produce the type required by the top-level response judgement.
+- **CRITICAL — tool calls must actually execute**: `[dispatch]` is emitted BEFORE the real tool call as an intent declaration; the real tool call MUST then fire immediately. `[reduce]` is emitted AFTER the real result returns, binding the actual result into `Gamma`. Writing `[dispatch]` without executing the tool is a type error (`IO Result` is unevaluated). Never populate `Gamma` with speculative or fabricated bindings — every binding in `Gamma` after a dispatch must come from actual tool output.
 
 **Example — reading a file then reasoning about it:**
 
