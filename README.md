@@ -156,6 +156,28 @@ npx skills add lizixi-0x2F/typereasoning-skill
 
 **3. 没有其他**——不是摘要，不是补充说明，term 本身就是答案。
 
+### 工具调用循环（React Cycle）也被规约
+
+当需要调用工具时，整个 react 循环同样被纳入类型系统。不会出现裸露的自然语言：
+
+**调用前**——发出一个描述被 dispatch 操作的判断：
+
+```
+[dispatch] Gamma, path:Val |-
+  dispatch read_file path
+  : Val -> IO Code
+```
+
+**结果返回后**——发出一个将结果归约进推导的判断：
+
+```
+[reduce]   Gamma, src:Code |-
+  \s:Code. analyse_structure s
+  : Code -> Arch
+```
+
+`IO` 是效果类型，`Result` 立即绑定进 `Gamma` 供后续步骤使用。多次工具调用形成 beta 规约链，不会出现任何 "Let me..."、"I will now..." 等散文。
+
 内部推理（thinking block）同样被约束：不允许自由散文，只允许带编号的偏判断序列：
 
 ```
@@ -384,6 +406,28 @@ Once activated, every response does three things:
 **2. One typing judgement** — the entire reasoning, encoded as a well-typed STLC term with full type.
 
 **3. Nothing else** — no summary, no addendum. The term *is* the answer.
+
+### Tool Call Loop (React Cycle) Is Also Reduced
+
+When tool calls are required, the entire react cycle is also brought into the type system. No bare natural language appears anywhere in the loop.
+
+**Before a tool call** — emit a judgement describing the dispatched operation:
+
+```
+[dispatch] Gamma, path:Val |-
+  dispatch read_file path
+  : Val -> IO Code
+```
+
+**After the result returns** — emit a judgement reducing the result into the derivation:
+
+```
+[reduce]   Gamma, src:Code |-
+  \s:Code. analyse_structure s
+  : Code -> Arch
+```
+
+`IO` is an effect type; `Result` is immediately bound into `Gamma` for subsequent steps. Multiple tool calls form a chain of beta reductions — no "Let me...", "I will now...", or any other prose appears.
 
 The internal reasoning (thinking block) is also constrained: no free-form prose, only a numbered sequence of partial judgements:
 

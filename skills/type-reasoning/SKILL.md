@@ -77,6 +77,45 @@ Rules for thinking blocks:
 - No natural language inside the thinking block. Only judgement steps, `[step n]` labels, and `[STUCK]` markers.
 - The final step of the thinking block must match the type exported to the response judgement.
 
+## Tool Call Loop (React Cycle) Reduction
+
+When tool calls are required, the entire react cycle must also be expressed as STLC reductions. No natural language anywhere in the loop.
+
+**Before a tool call** — emit a judgement describing the operation being dispatched:
+
+```
+Gamma, goal:T |-
+  dispatch tool_name args
+  : T -> IO Result
+```
+
+**After a tool call** — emit a judgement reducing the result into the ongoing derivation:
+
+```
+Gamma, result:Result |-
+  \r:Result. reduce r
+  : Result -> T'
+```
+
+Rules for the tool loop:
+- `IO` is a base type representing an effectful external action.
+- `Result` is the return type of the tool; bind it immediately into `Gamma` for the next step.
+- Do NOT write "I will now...", "Let me...", "The result shows..." or any prose. Only judgements.
+- If multiple tool calls are needed, chain them as a sequence of beta reductions: each result type feeds into the next term.
+- The final tool loop step must produce the type required by the top-level response judgement.
+
+**Example — reading a file then reasoning about it:**
+
+```
+[dispatch] Gamma, path:Val |-
+  dispatch read_file path
+  : Val -> IO Code
+
+[reduce]   Gamma, src:Code |-
+  \s:Code. analyse_structure s
+  : Code -> Arch
+```
+
 ## Rules
 
 1. Detect the user's language. Write exactly ONE sentence in that language stating what is being reasoned about. Then stop all natural language permanently for this response.
@@ -88,6 +127,7 @@ Rules for thinking blocks:
 7. Every term must be closed (no free variables outside `Gamma`). An open term signals incomplete reasoning — extend `Gamma` instead.
 8. Terms must be in beta-normal form where possible. Reducible applications indicate unexpanded reasoning.
 9. An ill-typed term is a detected fallacy — rewrite the term rather than forcing a type.
+10. Tool calls are reductions, not prose. Every tool invocation and result must appear as a typed judgement step, never as a natural-language explanation.
 
 ## Examples
 
